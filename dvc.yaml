@@ -1,0 +1,69 @@
+stages:
+  load_data:
+    cmd: python src/load_data.py --config=params.yaml
+    deps:
+    - src/get_data.py
+    - src/load_data.py
+    - data_given/allhyper.data
+    - data_given/allhyper.test
+    - data_given/allhypo.data
+    - data_given/allhypo.test
+    - data_given/thyroid0387.data
+    - data_given/hypothyroid.data
+    - data_given/sick-euthyroid.data
+    - data_given/ann-test.data
+    - data_given/ann-train.data
+
+    outs:
+    - data/raw/allhyper.data
+    - data/raw/allhyper.test
+    - data/raw/allhypo.data
+    - data/raw/allhypo.test
+    - data/raw/thyroid0387.data
+    - data/raw/hypothyroid.data
+    - data/raw/sick-euthyroid.data
+    - data/raw/ann-test.data
+    - data/raw/ann-train.data
+
+  clean_process_data:
+    cmd: python src/clean_process.py --config=params.yaml
+    deps:
+    - src/get_data.py
+    - src/utils/data_cleaning.py
+    - data/raw/allhyper.data
+    - data/raw/allhyper.test
+    - data/raw/allhypo.data
+    - data/raw/allhypo.test
+    - data/raw/thyroid0387.data
+    - data/raw/hypothyroid.data
+    - data/raw/sick-euthyroid.data
+    - data/raw/ann-test.data
+    - data/raw/ann-train.data
+    outs:
+    - data/processed/preprocessed_dataset.csv
+
+  split_data:
+    cmd: python src/train_test_split.py --config=params.yaml
+    deps:
+    - src/get_data.py
+    - data/processed/preprocessed_dataset.csv
+    - src/train_test_split.py
+    - src/utils/training.py
+
+    outs:
+    - data/processed/train.csv
+    - data/processed/test.csv
+    - saved_scaler_models/thyroid_scaler.pickle
+
+  trainevaluate:
+    cmd: python src/train_evaluate.py --config=params.yaml
+    deps:
+    - data/processed/train.csv
+    - data/processed/test.csv
+    - src/get_data.py
+    
+    metrics:
+    - reports/scores.json:
+        cache: false
+    outs:
+    - saved_scaler_models/thyroid_model.pkl 
